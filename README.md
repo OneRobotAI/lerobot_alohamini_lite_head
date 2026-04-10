@@ -1,5 +1,5 @@
 ## Updates
-- **[2025-4-10]** Compatible with LeRobot 0.5.1 Release
+- **[2025-4-10]** Compatible with LeRobot 0.5.2 Release
 
 
 ## Introduction
@@ -273,7 +273,39 @@ python examples/alohamini/record_bi.py \
 
 ```
 
-AM-ARM (6-DoF): identical command, only change `arm_profile=am-arm-6dof`.
+##### AM-ARM (6-DoF):
+
+//Create New Dataset
+
+```
+python examples/alohamini/record_bi.py \
+  --dataset $HF_USER/so100_bi_test \
+  --num_episodes 1 \
+  --fps 30 \
+  --episode_time 45 \
+  --reset_time 8 \
+  --task_description "pickup1" \
+  --remote_ip 127.0.0.1 \
+  --leader_id so101_leader_bi \
+  --arm_profile am-arm-6dof
+
+```
+
+//Resume Dataset
+```
+python examples/alohamini/record_bi.py \
+  --dataset $HF_USER/so100_bi_test \
+  --num_episodes 1 \
+  --fps 30 \
+  --episode_time 45 \
+  --reset_time 8 \
+  --task_description "pickup1" \
+  --remote_ip 127.0.0.1 \
+  --leader_id so101_leader_bi \
+  --arm_profile am-arm-6dof \
+  --resume
+
+```
 
 
 ### 9. Replay Dataset

@@ -26,6 +26,7 @@ class LiftAxisConfig:
     output_gear_ratio: float = 1.0    # Servo angle → lead screw angle transmission ratio
     soft_min_mm: float = 0.0
     soft_max_mm: float = 600        # Lift travel range
+    descent_floor_mm: float = 5.0   # Hard lower guard: refuse downward motion below this height
 
     # Homing (drive downward to hard stop → rebound slightly)
     home_down_speed: int = 1300      # Downward target velocity in velocity mode
@@ -175,7 +176,15 @@ class LiftAxis:
                     v_cmd = self.cfg.v_max
                 elif v_cmd < -self.cfg.v_max:
                     v_cmd = -self.cfg.v_max
-            # Limit if already at boundary
+            # Descent floor guard
+            if v_cmd < 0 and cur_mm <= self.cfg.descent_floor_mm:
+                print(
+                    f"[LiftAxis] Descent guard active: height {cur_mm:.1f} mm is at or below "
+                    f"the floor limit ({self.cfg.descent_floor_mm} mm). "
+                    "Downward motion blocked to prevent motor stall."
+                )
+                v_cmd = 0
+            # Soft boundary limit
             if (cur_mm >= self.cfg.soft_max_mm and v_cmd > 0) or (
                 cur_mm <= self.cfg.soft_min_mm and v_cmd < 0
             ):
@@ -188,7 +197,15 @@ class LiftAxis:
             # Limit if already at boundary
             try:
                 cur_mm = self.get_height_mm()
-                if (cur_mm >= self.cfg.soft_max_mm and v > 0) or (cur_mm <= self.cfg.soft_min_mm and v < 0):
+                # Descent floor guard
+                if v < 0 and cur_mm <= self.cfg.descent_floor_mm:
+                    print(
+                        f"[LiftAxis] Descent guard active: height {cur_mm:.1f} mm is at or below "
+                        f"the floor limit ({self.cfg.descent_floor_mm} mm). "
+                        "Downward motion blocked to prevent motor stall."
+                    )
+                    v = 0
+                elif (cur_mm >= self.cfg.soft_max_mm and v > 0) or (cur_mm <= self.cfg.soft_min_mm and v < 0):
                     v = 0
             except Exception:
                 pass

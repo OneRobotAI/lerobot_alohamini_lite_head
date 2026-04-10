@@ -58,12 +58,20 @@ def main():
         choices=["so-arm-5dof", "am-arm-6dof"],
         help="Follower arm profile selector.",
     )
+    parser.add_argument(
+        "--robot_model",
+        type=str,
+        default="alohamini1",
+        choices=["alohamini1", "alohamini2"],
+        help="Robot model: alohamini1 (lead=84 mm/rev) or alohamini2 (lead=120 mm/rev).",
+    )
     args = parser.parse_args()
 
     logging.info("Configuring LeKiwi")
     robot_config = LeKiwiConfig()
     robot_config.id = "AlohaMiniRobot"
     robot_config.arm_profile = args.arm_profile
+    robot_config.robot_model = args.robot_model
     robot = LeKiwi(robot_config)
 
 

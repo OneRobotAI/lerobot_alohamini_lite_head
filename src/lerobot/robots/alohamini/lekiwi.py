@@ -169,11 +169,12 @@ class LeKiwi(Robot):
         self.cameras = make_cameras_from_configs(config.cameras)
 
 
+        _lead_mm_per_rev = {"alohamini1": 84.0, "alohamini2": 131.0}.get(config.robot_model, 84.0)
         self.lift = LiftAxis(
-        LiftAxisConfig(),        
-        bus_left=self.left_bus,
-        bus_right=self.right_bus,
-)
+            LiftAxisConfig(lead_mm_per_rev=_lead_mm_per_rev),
+            bus_left=self.left_bus,
+            bus_right=self.right_bus,
+        )
         # Overcurrent debounce: require N consecutive over-limit reads
         self._overcurrent_count: dict[str, int] = {}
         self._overcurrent_trip_n = 20
