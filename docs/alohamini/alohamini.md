@@ -126,7 +126,7 @@ python examples/alohamini/teleoperate_bi.py \
   --remote_ip <Pi_IP> --leader_id so101_leader_bi --arm_profile so-arm-5dof
 
 python examples/alohamini/teleoperate_bi.py \
-  --remote_ip <Pi_IP> --leader_id so101_leader_bi --arm_profile am-leader-6dof
+  --remote_ip <Pi_IP> --leader_id am_leader_bi --arm_profile am-leader-6dof
 ```
 
 ---
@@ -251,7 +251,12 @@ Use any cloud GPU provider (e.g. AutoDL, Lambda Labs, Vast.ai). Set up the envir
 
 ## 10. Evaluation
 
-Copy the trained model to your local machine, then:
+Make sure the Pi host is already running (§5), then run inference from the PC.
+
+> `--robot_model` / `--robot.robot_model` must match the model running on the Pi host:  
+> `alohamini1` (SO-ARM 5-DoF, 16-dim state) · `alohamini2` / `alohamini2pro` (AM-ARM 6-DoF, 18-dim state)
+
+### Option A — `evaluate_bi.py` (custom script, N episodes, records to Hub)
 
 ```bash
 python examples/alohamini/evaluate_bi.py \
@@ -259,10 +264,43 @@ python examples/alohamini/evaluate_bi.py \
   --fps 20 \
   --episode_time 45 \
   --task_description "Pick and place task" \
-  --hf_model_id ./outputs/train/act_your_dataset1/checkpoints/020000/pretrained_model \
-  --hf_dataset_id $HF_USER/eval_dataset \
+  --hf_model_id outputs/train/act_your_dataset1/checkpoints/020000/pretrained_model \
+  --hf_dataset_id $HF_USER/eval_act_policy \
   --remote_ip <Pi_IP> \
-  --robot_id my_alohamini
+  --robot_id my_alohamini \
+  --robot_model alohamini2pro
+```
+
+### Option B — `lerobot-rollout` (official CLI)
+
+Pure inference, no recording:
+
+```bash
+python -m lerobot.scripts.lerobot_rollout \
+  --strategy.type=base \
+  --robot.type=alohamini_client \
+  --robot.remote_ip=<Pi_IP> \
+  --robot.robot_model=alohamini2pro \
+  --policy.path=outputs/train/act_your_dataset1/checkpoints/020000/pretrained_model \
+  --task="Pick and place task" \
+  --fps=20 \
+  --duration=45 \
+  --display_data=true
+```
+
+Inference + record eval dataset (dataset name must start with `rollout_`):
+
+```bash
+python -m lerobot.scripts.lerobot_rollout \
+  --strategy.type=sentry \
+  --robot.type=alohamini_client \
+  --robot.remote_ip=<Pi_IP> \
+  --robot.robot_model=alohamini2pro \
+  --policy.path=outputs/train/act_your_dataset1/checkpoints/020000/pretrained_model \
+  --dataset.repo_id=$HF_USER/rollout_eval1 \
+  --task="Pick and place task" \
+  --fps=20 \
+  --display_data=true
 ```
 
 ---

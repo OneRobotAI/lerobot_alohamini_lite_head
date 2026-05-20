@@ -187,15 +187,14 @@ Use any cloud GPU provider (e.g. AutoDL, Lambda Labs, Vast.ai). Set up the envir
 Copy the trained model to your local machine, then run inference on the follower arm:
 
 ```bash
-lerobot-record \
+lerobot-rollout \
+  --strategy.type=base \
   --robot.type=so101_follower \
   --robot.port=/dev/ttyACM1 \
   --robot.id=my_follower \
   --robot.arm_profile=am-follower-6dof \
   --policy.path=outputs/train/act_your_dataset1/checkpoints/020000/pretrained_model \
-  --dataset.repo_id=$HF_USER/eval_act_policy \
-  --dataset.single_task="your task description" \
-  --dataset.push_to_hub=false
+  --task="your task description"
 ```
 
 > AM-ARM200 Pro: replace `am-follower-6dof` with `am-follower-6dof-hd`.
