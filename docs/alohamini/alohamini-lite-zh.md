@@ -137,6 +137,12 @@ parser.add_argument("--robot_model", type=str, default="alohamini1",
                     help="Must match the robot_model on the Pi host side")
 ```
 
+### 第六步：头部俯仰舵机（head_pitch）
+
+本版本在右总线（right_port）上新增了一个头部俯仰舵机 `head_pitch`（STS3215，ID 12），所有型号（5-DoF / 6-DoF）均支持。
+
+代码改动已在仓库中完成，无需手动修改。
+
 ---
 
 **PC 端需要同步的文件：**
@@ -158,10 +164,13 @@ parser.add_argument("--robot_model", type=str, default="alohamini1",
 │                              │                   │                                  │
 │  • 主手臂（Leader，USB）     │                   │  • 从手臂（Follower，USB）        │
 │  • teleoperate_bi.py         │                   │  • 底盘轮子 + 升降轴（USB）       │
-│  • record_bi.py              │                   │  • 摄像头（USB）                  │
-│  • 训练 / 评估               │                   │  • lekiwi_host.py                │
+│  • record_bi.py              │                   │  • 头部俯仰舵机（USB）            │
+│  • 训练 / 评估               │                   │  • 摄像头（USB）                  │
+│                              │                   │  • lekiwi_host.py                │
 └──────────────────────────────┘                   └──────────────────────────────────┘
 ```
+
+头部俯仰舵机（`head_pitch`）连接在树莓派的 right_port 总线上（与右臂共用），ID 为 12，型号 STS3215。
 
 两台机器必须在同一局域网，并已安装完整环境。
 
@@ -185,6 +194,8 @@ class LeKiwiConfig(RobotConfig):
     left_port:  str = "/dev/ttyACM0"   # 替换为你的左总线端口
     right_port: str = "/dev/ttyACM1"   # 替换为你的右总线端口
 ```
+
+> 头部俯仰舵机接在右总线上，无需额外端口。
 
 **主手臂（Leader）** — 在 PC 上编辑 `examples/alohamini/teleoperate_bi.py`：
 
@@ -218,6 +229,8 @@ lerobot-find-cameras
 ### 步骤 1 — 校准从手臂（树莓派端）
 
 SSH 登录树莓派，根据你的型号运行对应的 host 脚本。首次运行会提示校准：将每个关节转到机械中点 → 回车 → 向左转 90° → 回车 → 向右转 90° → 回车。
+
+对于带头部俯仰的版本，校准时还会提示将头部俯仰关节也转到中点并记录其运动范围。
 
 ```bash
 # AlohaMini 1（SO-ARM 5-DoF）
@@ -305,8 +318,10 @@ python examples/alohamini/teleoperate_bi.py \
 **操作说明：**
 - 手动转主手臂的关节，看从臂是否跟着动
 - 键盘控制底盘：`w/s` 前后，`z/x` 左右平移，`a/d` 旋转，`u/j` 升降
+- **头部俯仰：`i` 抬头，`k` 低头**
 - 按 `q` 退出
 
+> 头部俯仰使用归一化位置控制（-1.0 到 1.0），每次按键步进 0.05。
 > 如果出现相机 FPS 不够用，可以修改 fps。有时候由于带宽或环境因素，相机会自动降低 fps 到 25。
 
 ---
@@ -400,6 +415,7 @@ python examples/alohamini/record_bi.py \
   --resume
 ```
 
+> 录制时头部俯仰动作通过键盘 `i`/`k` 控制，会被自动记录到数据集中。
 > 如果缺少 `datasets` 依赖，安装：`pip install 'lerobot[dataset]'`
 > 如果缺少 `socksio` 依赖，安装：`pip install 'httpx[socks]'`
 
@@ -458,8 +474,8 @@ lerobot-train \
 确保树莓派端 host 已在运行（第 5 节），然后从 PC 端运行推理。
 
 > `--robot_model` / `--robot.robot_model` **必须与树莓派端 host 运行的型号一致：**
-> - `alohamini1` — SO-ARM 5-DoF，16 维状态
-> - `alohamini2` / `alohamini2pro` / `alohamini2lite` — AM-ARM 6-DoF，18 维状态
+> - `alohamini1` — SO-ARM 5-DoF，**17 维状态**（含 head_pitch）
+> - `alohamini2` / `alohamini2pro` / `alohamini2lite` — AM-ARM 6-DoF，**19 维状态**（含 head_pitch）
 
 ### 方式 A — evaluate_bi.py（自定义脚本，N 个 episode，自动上传至 Hub）
 
@@ -516,9 +532,9 @@ python -m lerobot.scripts.lerobot_rollout \
 
 ## 附录：硬件配置对照表
 
-| `--robot_model` | 从手臂型号 | 关节数/臂 | 臂电机 | 底盘电机 | 升降电机 | 丝杠导程 |
-|---|---|---|---|---|---|---|
-| `alohamini1` | so-arm-5dof | 6（5 关节 + 夹爪） | 全 STS3215 | STS3215 | STS3215 | 84 mm/rev |
-| `alohamini2` | am-follower-6dof | 7（6 关节 + 夹爪） | 混合 STS3215/STS3095 | STS3215 | STS3095 | 131 mm/rev |
-| `alohamini2pro` | am-follower-6dof-hd | 7（6 关节 + 夹爪） | 全 STS3250 | STS3250 | STS3095 | 131 mm/rev |
-| `alohamini2lite` | am-follower-6dof-lite | 7（6 关节 + 夹爪） | 全 STS3215 | STS3215 | STS3215 | 84 mm/rev |
+| `--robot_model` | 从手臂型号 | 关节数/臂 | 臂电机 | 头部俯仰 | 底盘电机 | 升降电机 | 丝杠导程 |
+|---|---|---|---|---|---|---|---|
+| `alohamini1` | so-arm-5dof | 6（5 关节 + 夹爪） | 全 STS3215 | STS3215 (ID 12) | STS3215 | STS3215 | 84 mm/rev |
+| `alohamini2` | am-follower-6dof | 7（6 关节 + 夹爪） | 混合 STS3215/STS3095 | STS3215 (ID 12) | STS3215 | STS3095 | 131 mm/rev |
+| `alohamini2pro` | am-follower-6dof-hd | 7（6 关节 + 夹爪） | 全 STS3250 | STS3215 (ID 12) | STS3250 | STS3095 | 131 mm/rev |
+| `alohamini2lite` | am-follower-6dof-lite | 7（6 关节 + 夹爪） | 全 STS3215 | STS3215 (ID 12) | STS3215 | STS3215 | 84 mm/rev |

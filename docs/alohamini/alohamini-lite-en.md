@@ -1,4 +1,4 @@
-# AlohaMini Lite — Complete Operation Guide (English)
+# AlohaMini — Complete Operation Guide (English)
 
 > Prerequisites: complete [install.md](install.md) first.
 > Hardware configuration reference: [profiles.md](profiles.md).
@@ -137,6 +137,12 @@ parser.add_argument("--robot_model", type=str, default="alohamini1",
                     help="Must match the robot_model on the Pi host side")
 ```
 
+### Step 6: Head Pitch Servo (head_pitch)
+
+This version adds a head pitch servo `head_pitch` (STS3215, ID 12) on the right bus (`right_port`). All robot models (5-DoF / 6-DoF) include this extra degree of freedom.
+
+The code changes are already applied in this repository — no manual edits needed.
+
 ---
 
 **Files to sync to PC:**
@@ -158,10 +164,13 @@ parser.add_argument("--robot_model", type=str, default="alohamini1",
 │                          │                   │                                │
 │  • Leader arm (USB)      │                   │  • Follower arm (USB)          │
 │  • teleoperate_bi.py     │                   │  • Base wheels + lift (USB)    │
-│  • record_bi.py          │                   │  • Cameras (USB)               │
-│  • Training / Evaluation │                   │  • lekiwi_host.py              │
+│  • record_bi.py          │                   │  • Head pitch servo (USB)      │
+│  • Training / Evaluation │                   │  • Cameras (USB)               │
+│                          │                   │  • lekiwi_host.py              │
 └──────────────────────────┘                   └────────────────────────────────┘
 ```
+
+The head pitch servo (`head_pitch`) connects to the Pi's `right_port` bus (shared with the right arm), ID 12, STS3215.
 
 Both machines must be on the same LAN with the full environment installed.
 
@@ -185,6 +194,8 @@ class LeKiwiConfig(RobotConfig):
     left_port:  str = "/dev/ttyACM0"   # Replace with your left bus port
     right_port: str = "/dev/ttyACM1"   # Replace with your right bus port
 ```
+
+> The head pitch servo is on the right bus — no extra port needed.
 
 **Leader arm** — Edit `examples/alohamini/teleoperate_bi.py` on the PC:
 
@@ -218,6 +229,8 @@ The example below adds a left and right arm camera — adjust the camera indices
 ### Step 1 — Calibrate Follower Arm (Raspberry Pi)
 
 SSH into the Pi. Run the corresponding host script for your model. On first run, it will prompt: move each joint to mechanical center → Enter → rotate left 90° → Enter → rotate right 90° → Enter.
+
+For the head pitch version, the calibration also includes the head pitch joint — move it to center, then through its full range of motion.
 
 ```bash
 # AlohaMini 1 (SO-ARM 5-DoF)
@@ -305,8 +318,10 @@ python examples/alohamini/teleoperate_bi.py \
 **Controls:**
 - Manually move the leader arm joints — the follower should mirror them
 - Keyboard base control: `w/s` forward/back, `z/x` strafe left/right, `a/d` rotate, `u/j` lift up/down
+- **Head pitch: `i` tilt up, `k` tilt down**
 - Press `q` to quit
 
+> Head pitch uses normalized position control (-1.0 to 1.0), stepping 0.05 per keypress.
 > If camera FPS is too low, you can adjust the fps setting. Sometimes bandwidth or environmental factors cause the camera to auto-reduce FPS to 25.
 
 ---
@@ -400,6 +415,7 @@ python examples/alohamini/record_bi.py \
   --resume
 ```
 
+> Head pitch actions are controlled via `i`/`k` keys during recording and are automatically saved to the dataset.
 > If `datasets` is missing: `pip install 'lerobot[dataset]'`
 > If `socksio` is missing: `pip install 'httpx[socks]'`
 
@@ -458,8 +474,8 @@ Use any cloud GPU provider (e.g., Featurize, AutoDL, Lambda Labs, Vast.ai). Set 
 Ensure the Pi host is running (Section 5), then run inference from the PC.
 
 > `--robot_model` / `--robot.robot_model` **must match the model running on the Pi host:**
-> - `alohamini1` — SO-ARM 5-DoF, 16-dim state
-> - `alohamini2` / `alohamini2pro` / `alohamini2lite` — AM-ARM 6-DoF, 18-dim state
+> - `alohamini1` — SO-ARM 5-DoF, **17-dim state** (includes head_pitch)
+> - `alohamini2` / `alohamini2pro` / `alohamini2lite` — AM-ARM 6-DoF, **19-dim state** (includes head_pitch)
 
 ### Method A — evaluate_bi.py (custom script, N episodes, auto-upload to Hub)
 
@@ -514,9 +530,9 @@ python -m lerobot.scripts.lerobot_rollout \
 
 ## Appendix: Hardware Configuration Table
 
-| `--robot_model` | Follower Arm Profile | Joints/Arm | Arm Motors | Base Motor | Lift Motor | Lead Screw |
-|---|---|---|---|---|---|---|
-| `alohamini1` | so-arm-5dof | 6 (5 joints + gripper) | All STS3215 | STS3215 | STS3215 | 84 mm/rev |
-| `alohamini2` | am-follower-6dof | 7 (6 joints + gripper) | Mixed STS3215/STS3095 | STS3215 | STS3095 | 131 mm/rev |
-| `alohamini2pro` | am-follower-6dof-hd | 7 (6 joints + gripper) | All STS3250 | STS3250 | STS3095 | 131 mm/rev |
-| `alohamini2lite` | am-follower-6dof-lite | 7 (6 joints + gripper) | All STS3215 | STS3215 | STS3215 | 84 mm/rev |
+| `--robot_model` | Follower Arm Profile | Joints/Arm | Arm Motors | Head Pitch | Base Motor | Lift Motor | Lead Screw |
+|---|---|---|---|---|---|---|---|
+| `alohamini1` | so-arm-5dof | 6 (5 joints + gripper) | All STS3215 | STS3215 (ID 12) | STS3215 | STS3215 | 84 mm/rev |
+| `alohamini2` | am-follower-6dof | 7 (6 joints + gripper) | Mixed STS3215/STS3095 | STS3215 (ID 12) | STS3215 | STS3095 | 131 mm/rev |
+| `alohamini2pro` | am-follower-6dof-hd | 7 (6 joints + gripper) | All STS3250 | STS3215 (ID 12) | STS3250 | STS3095 | 131 mm/rev |
+| `alohamini2lite` | am-follower-6dof-lite | 7 (6 joints + gripper) | All STS3215 | STS3215 (ID 12) | STS3215 | STS3215 | 84 mm/rev |
