@@ -126,6 +126,7 @@ class LeKiwiClient(Robot):
             (
                 *self._left_arm_state_keys,
                 *self._right_arm_state_keys,
+                "head_pitch.pos",
                 "x.vel",
                 "y.vel",
                 "theta.vel",
@@ -392,8 +393,22 @@ class LeKiwiClient(Robot):
 
         return {"lift_axis.height_mm": target}
 
+    def _from_keyboard_to_head_pitch_action(self, pressed_keys: np.ndarray):
+        up_pressed = self.teleop_keys.get("head_up", "i") in pressed_keys
+        dn_pressed = self.teleop_keys.get("head_down", "k") in pressed_keys
 
+        h_now = float(self.last_remote_state.get("head_pitch.pos", 0.0))
 
+        step = 0.05
+        if up_pressed and not dn_pressed:
+            target = h_now + step
+        elif dn_pressed and not up_pressed:
+            target = h_now - step
+        else:
+            target = h_now
+
+        target = float(np.clip(target, -1.0, 1.0))
+        return {"head_pitch.pos": target}
 
     def configure(self):
         pass

@@ -23,7 +23,7 @@ from ..config import RobotConfig
 def lekiwi_cameras_config() -> dict[str, CameraConfig]:
     return {
           "forward": OpenCVCameraConfig(
-              index_or_path="/dev/video3", fps=30, width=640, height=480, rotation=Cv2Rotation.NO_ROTATION
+              index_or_path="/dev/video0", fps=30, width=640, height=480, rotation=Cv2Rotation.NO_ROTATION
           ),
         # "backward": OpenCVCameraConfig(
         #     index_or_path="/dev/am_camera_backward", fps=30, width=640, height=480, rotation=Cv2Rotation.NO_ROTATION
@@ -35,7 +35,7 @@ def lekiwi_cameras_config() -> dict[str, CameraConfig]:
            #   index_or_path="/dev/video2", fps=30, width=640, height=480, rotation=Cv2Rotation.NO_ROTATION
           #),
           "wrist_right": OpenCVCameraConfig(
-              index_or_path="/dev/video0", fps=30, width=640, height=480, rotation=Cv2Rotation.NO_ROTATION
+              index_or_path="/dev/video4", fps=30, width=640, height=480, rotation=Cv2Rotation.NO_ROTATION
           ),
     }
 
@@ -118,6 +118,9 @@ class LeKiwiClientConfig(RobotConfig):
             # Z axis
             "lift_up": "u",
             "lift_down": "j",
+            # Head pitch
+            "head_up": "i",
+            "head_down": "k",
             # quit teleop
             "quit": "q",
         }

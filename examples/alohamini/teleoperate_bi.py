@@ -85,8 +85,9 @@ while True:
     keyboard_keys = keyboard.get_action()
     base_action = robot._from_keyboard_to_base_action(keyboard_keys)
     lift_action = robot._from_keyboard_to_lift_action(keyboard_keys)
+    head_action = robot._from_keyboard_to_head_pitch_action(keyboard_keys)
 
-    action = {**arm_actions, **base_action, **lift_action}
+    action = {**arm_actions, **base_action, **lift_action, **head_action}
     log_rerun_data(observation, action)
 
     if not NO_ROBOT:

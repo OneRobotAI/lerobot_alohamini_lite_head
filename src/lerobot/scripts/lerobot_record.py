@@ -311,7 +311,8 @@ def record_loop(
             keyboard_action = teleop_keyboard.get_action()
             base_action = robot._from_keyboard_to_base_action(keyboard_action)
             lift_action = robot._from_keyboard_to_lift_action(keyboard_action)  #AlohaMini addition
-            act = {**arm_action, **base_action, **lift_action} if len(base_action) > 0 else arm_action #AlohaMini fix
+            head_action = robot._from_keyboard_to_head_pitch_action(keyboard_action)  #AlohaMini addition
+            act = {**arm_action, **base_action, **lift_action, **head_action} if len(base_action) > 0 else arm_action #AlohaMini fix
             act_processed_teleop = teleop_action_processor((act, obs))
             action_values = act_processed_teleop
             robot_action_to_send = robot_action_processor((act_processed_teleop, obs))

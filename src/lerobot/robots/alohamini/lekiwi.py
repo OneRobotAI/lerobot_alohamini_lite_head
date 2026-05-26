@@ -198,7 +198,7 @@ class LeKiwi(Robot):
                 port=self.config.right_port,
                 motors={
                     **right_arm_motors_cfg,
-                    #"lift_axis": Motor(12, "sts3215", MotorNormMode.DEGREES),
+                    "head_pitch": Motor(12, "sts3215", norm_mode_body),
                 },
                 calibration=self.calibration,
             )
@@ -213,6 +213,7 @@ class LeKiwi(Robot):
         else:
             self.left_arm_motors  = [m for m in self.left_bus.motors        if m.startswith("arm_left_")]
             self.right_arm_motors = [m for m in self.right_bus.motors if m.startswith("arm_right_")]
+            self.head_pitch_motors = [m for m in self.right_bus.motors if m.startswith("head_pitch")]
 
         self.base_motors = [m for m in self.left_bus.motors if m.startswith("base_")]
 
@@ -239,11 +240,11 @@ class LeKiwi(Robot):
             (
                 *self._left_arm_state_keys,
                 *self._right_arm_state_keys,
+                "head_pitch.pos",
                 "x.vel",
                 "y.vel",
                 "theta.vel",
-                "lift_axis.height_mm",   # new
-                #"lift_axis.vel",         # new (optional, for debugging)
+                "lift_axis.height_mm",
             ),
             float,
         )
@@ -361,19 +362,22 @@ class LeKiwi(Robot):
         r_mins, r_maxs = {}, {}
 
         if getattr(self, "right_bus", None) and getattr(self, "right_arm_motors", None):
-            self.right_bus.disable_torque(self.right_arm_motors)
-            for name in self.right_arm_motors:
+            right_calib_motors = self.right_arm_motors + (
+                self.head_pitch_motors if hasattr(self, "head_pitch_motors") else []
+            )
+            self.right_bus.disable_torque(right_calib_motors)
+            for name in right_calib_motors:
                 self.right_bus.write("Operating_Mode", name, OperatingMode.POSITION.value)
 
-            input("Move RIGHT arm to the middle of its range of motion, then press ENTER...")
-            right_homing = self.right_bus.set_half_turn_homings(self.right_arm_motors)
+            input("Move RIGHT arm and head pitch to the middle of their range of motion, then press ENTER...")
+            right_homing = self.right_bus.set_half_turn_homings(right_calib_motors)
 
             right_full_turn_motor = "arm_right_wrist_roll"
-            full_turn_right = [right_full_turn_motor] if right_full_turn_motor in self.right_arm_motors else []
-            unknown_right = [m for m in self.right_arm_motors if m not in full_turn_right]
+            full_turn_right = [right_full_turn_motor] if right_full_turn_motor in right_calib_motors else []
+            unknown_right = [m for m in right_calib_motors if m not in full_turn_right]
 
             print(
-                f"Move RIGHT arm joints sequentially through full ROM (except '{right_full_turn_motor}'). "
+                f"Move RIGHT arm joints and head pitch sequentially through full ROM (except '{right_full_turn_motor}'). "
                 "Press ENTER to stop..."
             )
             r_mins, r_maxs = self.right_bus.record_ranges_of_motion(unknown_right)
@@ -447,7 +451,11 @@ class LeKiwi(Robot):
                 self.right_bus.write("P_Coefficient", name, 16)
                 self.right_bus.write("I_Coefficient", name, 0)
                 self.right_bus.write("D_Coefficient", name, 32)
-            #self.right_bus.enable_torque()
+            for name in getattr(self, "head_pitch_motors", []):
+                self.right_bus.write("Operating_Mode", name, OperatingMode.POSITION.value)
+                self.right_bus.write("P_Coefficient", name, 16)
+                self.right_bus.write("I_Coefficient", name, 0)
+                self.right_bus.write("D_Coefficient", name, 32)
 
         #self.lift.configure()
 
@@ -628,10 +636,15 @@ class LeKiwi(Robot):
             else {}
         )
 
+        head_pitch_pos = {}
+        if self.right_bus and getattr(self, "head_pitch_motors", None):
+            head_pitch_read = self.right_bus.sync_read("Present_Position", self.head_pitch_motors)
+            head_pitch_pos = {f"{k}.pos": v for k, v in head_pitch_read.items()}
+
         left_arm_state = {f"{k}.pos": v for k, v in left_pos.items()}
         right_arm_state = {f"{k}.pos": v for k, v in right_pos.items()}
 
-        obs_dict = {**left_arm_state, **right_arm_state,**base_vel}
+        obs_dict = {**left_arm_state, **right_arm_state, **head_pitch_pos, **base_vel}
         self.lift.contribute_observation(obs_dict)
         #print(f"Observation dict so far: {obs_dict}")  # debug
 
@@ -664,9 +677,9 @@ class LeKiwi(Robot):
         Returns:
             np.ndarray: the action sent to the motors, potentially clipped.
         """
-        # arm_goal_pos = {k: v for k, v in action.items() if k.endswith(".pos")}
         left_pos  = {k: v for k, v in action.items() if k.endswith(".pos") and k.startswith("arm_left_") and k.replace(".pos", "") in self.left_bus.motors}
         right_pos = {k: v for k, v in action.items() if k.endswith(".pos") and k.startswith("arm_right_") and self.right_bus is not None and k.replace(".pos", "") in self.right_bus.motors}
+        head_pitch_pos = {k: v for k, v in action.items() if k == "head_pitch.pos"}
 
 
         base_goal_vel = {k: v for k, v in action.items() if k.endswith(".vel")}
@@ -709,10 +722,12 @@ class LeKiwi(Robot):
             self.left_bus.sync_write("Goal_Position", {k.replace(".pos", ""): v for k, v in left_pos.items()})
         if self.right_bus and right_pos:
             self.right_bus.sync_write("Goal_Position", {k.replace(".pos", ""): v for k, v in right_pos.items()})
+        if self.right_bus and head_pitch_pos:
+            self.right_bus.sync_write("Goal_Position", {k.replace(".pos", ""): v for k, v in head_pitch_pos.items()})
         self.left_bus.sync_write("Goal_Velocity", base_wheel_goal_vel)
 
         lift_sent = {k: v for k, v in action.items() if k.startswith("lift_axis.")}
-        return {**left_pos, **right_pos, **base_goal_vel, **lift_sent}
+        return {**left_pos, **right_pos, **head_pitch_pos, **base_goal_vel, **lift_sent}
 
 
     def stop_base(self):
