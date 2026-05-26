@@ -17,10 +17,10 @@ This variant adds a head pitch degree of freedom to all robot models, controlled
 
 | Model | DoF | Arm Motors | Head Pitch | Base | Lift | Lead Screw |
 |-------|-----|-----------|-----------|------|------|------------|
-| AlohaMini 1 (SO-ARM) | 5-DoF | All STS3215 | STS3215 (ID 12) | STS3215 | STS3215 | 84 mm/rev |
-| AlohaMini 2 | 6-DoF | Mixed STS3215/3095 | STS3215 (ID 12) | STS3215 | STS3095 | 131 mm/rev |
-| AlohaMini 2 Pro | 6-DoF | All STS3250 | STS3215 (ID 12) | STS3250 | STS3095 | 131 mm/rev |
-| **AlohaMini 2 Lite** | **6-DoF** | **All STS3215** | **STS3215 (ID 12)** | **STS3215** | **STS3215** | **84 mm/rev** |
+| AlohaMini 1 Head (SO-ARM) | 5-DoF | All STS3215 | STS3215 (ID 12) | STS3215 | STS3215 | 84 mm/rev |
+| AlohaMini 2 Head | 6-DoF | Mixed STS3215/3095 | STS3215 (ID 12) | STS3215 | STS3095 | 131 mm/rev |
+| AlohaMini 2 Pro Head | 6-DoF | All STS3250 | STS3215 (ID 12) | STS3250 | STS3095 | 131 mm/rev |
+| **AlohaMini 2 Lite Head** | **6-DoF** | **All STS3215** | **STS3215 (ID 12)** | **STS3215** | **STS3215** | **84 mm/rev** |
 
 ---
 
