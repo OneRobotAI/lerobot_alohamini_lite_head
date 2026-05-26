@@ -42,10 +42,9 @@
 
 #### 1.2 添加 robot spec
 
-找到 `_ROBOT_SPECS` 字典（大概 112 行），看到 `"alohamini2pro"` 这一段，在它**之后**（`}` 后面加逗号，然后插入）：
-
+找到 `_ROBOT_SPECS` 字典（大概 112 行），看到 `"alohamini2pro-head"` 这一段，在它**之后**（`}` 后面加逗号，然后插入）：
 ```python
-    "alohamini2pro": {
+    "alohamini2pro-head": {
         "arm_profile": "am-follower-6dof-hd",
         "base_motor": "sts3250",
         "lift_motor": "sts3095",
@@ -53,7 +52,7 @@
     },
 
     # 👇 在这里插入新 spec
-    "alohamini2lite": {
+    "alohamini2lite-head": {
         "arm_profile": "am-follower-6dof-lite",
         "base_motor": "sts3215",
         "lift_motor": "sts3215",
@@ -65,10 +64,10 @@
 
 ### 第二步：打开 `src/lerobot/robots/alohamini/config_lekiwi.py`（可选）
 
-找到 `robot_model: str = "alohamini1"` 上面的注释，在 `alohamini2pro` 那行后面加一行：
+找到 `robot_model: str = "alohamini1"` 上面的注释，在 `alohamini2pro-head` 那行后面加一行：
 
 ```
-    # alohamini2lite– am-follower-6dof-lite (全 STS3215 6 轴), base sts3215, lift sts3215, lead=131 mm/rev
+    # alohamini2lite-head– am-follower-6dof-lite (全 STS3215 6 轴), base sts3215, lift sts3215, lead=131 mm/rev
 ```
 
 以及 `LeKiwiClientConfig` 里也有类似的注释，同样补一行。
@@ -80,13 +79,13 @@
 原来：
 
 ```python
-_6DOF_MODELS = {"alohamini2", "alohamini2pro"}
+_6DOF_MODELS = {"alohamini2-head", "alohamini2pro-head"}
 ```
 
 改成：
 
 ```python
-_6DOF_MODELS = {"alohamini2", "alohamini2pro", "alohamini2lite"}
+_6DOF_MODELS = {"alohamini2-head", "alohamini2pro-head", "alohamini2lite-head"}
 ```
 
 ---
@@ -96,13 +95,13 @@ _6DOF_MODELS = {"alohamini2", "alohamini2pro", "alohamini2lite"}
 原来：
 
 ```python
-choices=["alohamini1", "alohamini2", "alohamini2pro"],
+choices=["alohamini1-head", "alohamini2-head", "alohamini2pro-head"],
 ```
 
-改成：
+**改成：**
 
 ```python
-choices=["alohamini1", "alohamini2", "alohamini2pro", "alohamini2lite"],
+choices=["alohamini1-head", "alohamini2-head", "alohamini2pro-head", "alohamini2lite-head"],
 ```
 
 再把第 61-63 行的 help 注释后面加一行，注意要在上一行末尾先加 `\n`：
@@ -110,10 +109,10 @@ choices=["alohamini1", "alohamini2", "alohamini2pro", "alohamini2lite"],
 ```python
 help=(
     "Robot model — drives follower arm profile, base motors, lift motor, and lead screw pitch.\n"
-    "  alohamini1   : so-arm-5dof,         base sts3215, lift sts3215, lead=84 mm/rev\n"
-    "  alohamini2   : am-follower-6dof,    base sts3215, lift sts3095, lead=131 mm/rev\n"
-    "  alohamini2pro: am-follower-6dof-hd, base sts3250, lift sts3095, lead=131 mm/rev\n"
-    "  alohamini2lite: am-follower-6dof-lite, base sts3215, lift sts3215, lead=84 mm/rev"
+    "  alohamini1-head   : so-arm-5dof,         base sts3215, lift sts3215, lead=84 mm/rev\n"
+    "  alohamini2-head   : am-follower-6dof,    base sts3215, lift sts3095, lead=131 mm/rev\n"
+    "  alohamini2pro-head: am-follower-6dof-hd, base sts3250, lift sts3095, lead=131 mm/rev\n"
+    "  alohamini2lite-head: am-follower-6dof-lite, base sts3215, lift sts3215, lead=84 mm/rev"
 ),
 ```
 
@@ -124,16 +123,16 @@ help=(
 原来：
 
 ```python
-parser.add_argument("--robot_model", type=str, default="alohamini1",
-                    choices=["alohamini1", "alohamini2", "alohamini2pro"],
+parser.add_argument("--robot_model", type=str, default="alohamini1-head",
+                    choices=["alohamini1-head", "alohamini2-head", "alohamini2pro-head"],
                     help="Must match the robot_model on the Pi host side")
 ```
 
-改成：
+**改成：**
 
 ```python
-parser.add_argument("--robot_model", type=str, default="alohamini1",
-                    choices=["alohamini1", "alohamini2", "alohamini2pro", "alohamini2lite"],
+parser.add_argument("--robot_model", type=str, default="alohamini1-head",
+                    choices=["alohamini1-head", "alohamini2-head", "alohamini2pro-head", "alohamini2lite-head"],
                     help="Must match the robot_model on the Pi host side")
 ```
 
@@ -240,10 +239,10 @@ python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini1
 python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini2
 
 # AlohaMini 2 Pro（AM-ARM 6-DoF，STS3250）
-python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini2pro
+python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini2pro-head
 
 # AlohaMini 2 Lite（AM-ARM 6-DoF，全 STS3215）
-python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini2lite
+python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini2lite-head
 ```
 
 > SO-ARM 5-DoF 参考中点位置：参见原版手册图示。
@@ -259,7 +258,7 @@ python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini2lite
 校准主臂时，需要先开启 `lekiwi_host`，参照上一步从臂校准，例如：
 
 ```bash
-python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini2lite
+python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini2lite-head
 ```
 
 **SO-ARM 主手（5-DoF）：**
@@ -291,16 +290,16 @@ python examples/alohamini/teleoperate_bi.py \
 
 ```bash
 # AlohaMini 1
-python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini1
+python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini1-head
 
 # AlohaMini 2
-python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini2
+python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini2-head
 
 # AlohaMini 2 Pro
-python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini2pro
+python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini2pro-head
 
 # AlohaMini 2 Lite
-python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini2lite
+python -m lerobot.robots.alohamini.lekiwi_host --robot_model alohamini2lite-head
 ```
 
 **PC — 按主手型号启动 client：**
@@ -372,8 +371,8 @@ python examples/alohamini/record_bi.py \
 在 `--arm_profile` 和 `--resume` 之间插入：
 
 ```python
-parser.add_argument("--robot_model", type=str, default="alohamini1",
-                    choices=["alohamini1", "alohamini2", "alohamini2pro", "alohamini2lite"],
+parser.add_argument("--robot_model", type=str, default="alohamini1-head",
+                    choices=["alohamini1-head", "alohamini2-head", "alohamini2pro-head", "alohamini2lite-head"],
                     help="Must match the robot_model on the Pi host side")
 ```
 
@@ -396,7 +395,7 @@ python examples/alohamini/record_bi.py \
   --remote_ip 192.168.1.9 \
   --leader_id am_leader_bi \
   --arm_profile am-leader-6dof \
-  --robot_model alohamini2lite
+  --robot_model alohamini2lite-head
 ```
 
 **续录已有数据集（加 `--resume`）：**

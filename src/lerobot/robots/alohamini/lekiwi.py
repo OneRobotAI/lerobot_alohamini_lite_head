@@ -121,26 +121,25 @@ def _arm_state_keys(prefix: str, arm_profile: str) -> tuple[str, ...]:
 # Per-model hardware specifications. `robot_model` is the customer-facing whole-robot SKU;
 # `arm_profile` selects the follower arm hardware mounted on that robot.
 _ROBOT_SPECS: dict[str, dict] = {
-    "alohamini1": {
+    "alohamini1-head": {
         "arm_profile": "so-arm-5dof",
         "base_motor": "sts3215",
         "lift_motor": "sts3215",
         "lead_mm_per_rev": 84.0,
     },
-    "alohamini2": {
+    "alohamini2-head": {
         "arm_profile": "am-follower-6dof",
         "base_motor": "sts3215",
         "lift_motor": "sts3095",
         "lead_mm_per_rev": 131.0,
     },
-    "alohamini2pro": {
+    "alohamini2pro-head": {
         "arm_profile": "am-follower-6dof-hd",
         "base_motor": "sts3250",
         "lift_motor": "sts3095",
         "lead_mm_per_rev": 131.0,
     },
-    # 👇 在这里插入新 spec-适配ST3215
-    "alohamini2lite": {
+    "alohamini2lite-head": {
         "arm_profile": "am-follower-6dof-lite",
         "base_motor": "sts3215",
         "lift_motor": "sts3215",

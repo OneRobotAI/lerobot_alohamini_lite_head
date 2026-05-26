@@ -31,8 +31,8 @@ def main():
     parser.add_argument("--hf_dataset_id", type=str, required=True)
     parser.add_argument("--remote_ip", type=str, default="127.0.0.1")
     parser.add_argument("--robot_id", type=str, default="lekiwi")
-    parser.add_argument("--robot_model", type=str, default="alohamini1",
-                        choices=["alohamini1", "alohamini2", "alohamini2pro", "alohamini2lite"],
+    parser.add_argument("--robot_model", type=str, default="alohamini1-head",
+                        choices=["alohamini1-head", "alohamini2-head", "alohamini2pro-head", "alohamini2lite-head"],
                         help="Must match the robot_model on the Pi host side")
     args = parser.parse_args()
 

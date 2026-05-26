@@ -38,8 +38,8 @@ def main():
         choices=["so-arm-5dof", "am-leader-6dof"],
         help="Leader arm profile selector.",
     )
-    parser.add_argument("--robot_model", type=str, default="alohamini1",
-                        choices=["alohamini1", "alohamini2", "alohamini2pro", "alohamini2lite"],
+    parser.add_argument("--robot_model", type=str, default="alohamini1-head",
+                        choices=["alohamini1-head", "alohamini2-head", "alohamini2pro-head", "alohamini2lite-head"],
                         help="Must match the robot_model on the Pi host side")
     parser.add_argument("--resume", action="store_true", help="Resume recording on existing dataset")
 
